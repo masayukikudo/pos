@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   const [barcode, setBarcode] = useState('');
@@ -13,51 +13,50 @@ export default function Home() {
   const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleScan = async () => {
-    try {
-      // カメラ機能の実装
-      const video = document.createElement('video');
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
-      video.play();
+    console.log("Scan button clicked"); // デバッグ用ログ
+    const barcodes = ['000001']; // 固定のバーコードリスト
 
-      // バーコードをスキャンするロジックを実装（ここでは擬似的にバーコードを設定）
-      // 実際にはバーコードリーダーなどのライブラリを使用してバーコードを読み取ります
-      const scannedCode = "example-code"; // 実際にはカメラから取得したバーコードをここに設定
-      setBarcode(scannedCode);
+    for (const scannedCode of barcodes) {
+      try {
+          console.log(`Fetching product for barcode: ${scannedCode}`); // デバッグ用ログ
+          const product = await queryProductMaster(scannedCode);
+          if (product) {
+              setBarcode(scannedCode);
+              setProduct(product);
 
-      // 商品マスタに問い合わせ
-      const product = await queryProductMaster(scannedCode);
-      setProduct(product);
-      if (product) {
-        const existingProductIndex = purchaseList.findIndex(item => item.code === product.code);
-        if (existingProductIndex >= 0) {
-          // 既存の商品を更新
-          const updatedList = [...purchaseList];
-          updatedList[existingProductIndex].quantity += 1;
-          setPurchaseList(updatedList);
-        } else {
-          // 新しい商品を追加
-          setPurchaseList([...purchaseList, { ...product, quantity: 1 }]);
-        }
+              const existingProductIndex = purchaseList.findIndex(item => item.code === product.code);
+              if (existingProductIndex >= 0) {
+                  const updatedList = [...purchaseList];
+                  updatedList[existingProductIndex].quantity += 1;
+                  setPurchaseList(updatedList);
+              } else {
+                  setPurchaseList([...purchaseList, { ...product, quantity: 1 }]);
+              }
+          }
+      } catch (error) {
+          console.error('Error during scanning:', error);
       }
-    } catch (error) {
-      if (error.name === 'NotAllowedError') {
-        alert('カメラへのアクセスが許可されていません。ブラウザの設定を確認してください。');
-      } else {
-        console.error('Error accessing the camera', error);
-      }
-    }
-  };
+  }
+};
 
-  const queryProductMaster = async (code: string) => {
-    // ここで商品マスタに問い合わせる処理を実装
-    // 例として、固定のデータを返す
-    if (code === "example-code") {
-      return { name: "Sample Product", code, price: 1000 };
-    } else {
+const queryProductMaster = async (code) => {
+  try {
+      const response = await fetch(`http://127.0.0.1:8000/search_product/?code=${code}`, {
+          method: 'GET',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+      });
+      if (!response.ok) {
+          throw new Error('Product not found');
+      }
+      const data = await response.json();
+      return data;
+  } catch (error) {
+      console.error('Error fetching product:', error);
       return null;
-    }
-  };
+  }
+};
 
   const handleRemoveProduct = () => {
     if (selectedProduct) {
@@ -100,12 +99,34 @@ export default function Home() {
     setQuantity(product.quantity);
   };
 
-  const handlePurchase = () => {
-    const total = purchaseList.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const handlePurchase = async () => {
+    const total = calculateTotal();
     setTotalPrice(total);
-    // DBへ保存処理
-    // 保存処理をここに追加
-  };
+    try {
+        for (const item of purchaseList) {
+            const response = await fetch('http://127.0.0.1:8000/purchase/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    code: item.code,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity,
+                    total_amount: item.price * item.quantity,
+                    datetime: new Date().toISOString()  // 現在の日時を追加
+                }),
+            });
+            if (!response.ok) {
+                throw new Error('Failed to save purchase');
+            }
+        }
+        console.log('All purchases saved successfully');
+    } catch (error) {
+        console.error('Error saving purchases:', error);
+    }
+};
 
   const handleClosePopup = () => {
     setTotalPrice(0);
@@ -116,8 +137,7 @@ export default function Home() {
   };
 
   const calculateTotal = () => {
-    const total = purchaseList.reduce((sum, item) => sum + item.price * item.quantity, 0);
-    return total;
+    return purchaseList.reduce((sum, item) => sum + item.price * item.quantity, 0);
   };
 
   return (
