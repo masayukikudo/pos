@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-from db_control.crud import get_product_by_code, get_all_products, create_purchase
+from db_control.crud import get_product_by_code, get_all_products, create_purchase, create_purchase_detail
 
 app = FastAPI()
 
@@ -28,12 +28,21 @@ class ProductModel(BaseModel):
     price: float
 
 class PurchaseModel(BaseModel):
-    code: str
-    name: str
-    price: float
-    quantity: int
+    trd_id: int
+    datetime: datetime
+    emp_cd: str
+    store_cd: str
+    pos_no: str
     total_amount: float
-    datetime: datetime  # datetimeフィールドを追加
+
+class PurchaseDetailModel(BaseModel):
+    dtl_id: int
+    trd_id: int
+    prd_id: int
+    prd_code: str
+    prd_name: str
+    prd_price: int
+    quantity: int
 
 @app.get("/search_product/", response_model=ProductModel)
 async def search_product(code: str) -> Optional[ProductModel]:
@@ -50,6 +59,41 @@ async def get_products() -> List[ProductModel]:
     return products
 
 @app.post("/purchase/", response_model=PurchaseModel)
+async def create_purchase_endpoint(purchase_details: List[PurchaseDetailModel]):
+    total_amount = sum(detail.prd_price * detail.quantity for detail in purchase_details)
+    purchase = PurchaseModel(
+        datetime=datetime.now(),
+        emp_cd="EMP001",
+        store_cd="30",
+        pos_no="90",
+        total_amount=total_amount
+    )
+    created_purchase = create_purchase(
+        datetime=purchase.datetime,
+        emp_cd=purchase.emp_cd,
+        store_cd=purchase.store_cd,
+        pos_no=purchase.pos_no,
+        total_amount=purchase.total_amount
+    )
+    for detail in purchase_details:
+        create_purchase_detail(
+            dtl_id=detail.dtl_id,
+            trd_id=created_purchase.trd_id,
+            prd_id=detail.prd_id,
+            prd_code=detail.prd_code,
+            prd_name=detail.prd_name,
+            prd_price=detail.prd_price,
+            quantity=detail.quantity
+        )
+    return created_purchase
+
+
+'''
+@app.post("/purchase/", response_model=PurchaseModel)
 async def create_purchase_endpoint(purchase: PurchaseModel):
     created_purchase = create_purchase(purchase)
     return created_purchase
+'''
+
+
+
