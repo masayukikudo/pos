@@ -28,7 +28,6 @@ class ProductModel(BaseModel):
     price: float
 
 class PurchaseModel(BaseModel):
-    trd_id: int
     datetime: datetime
     emp_cd: str
     store_cd: str
@@ -36,8 +35,6 @@ class PurchaseModel(BaseModel):
     total_amount: float
 
 class PurchaseDetailModel(BaseModel):
-    dtl_id: int
-    trd_id: int
     prd_id: int
     prd_code: str
     prd_name: str
@@ -77,7 +74,6 @@ async def create_purchase_endpoint(purchase_details: List[PurchaseDetailModel]):
     )
     for detail in purchase_details:
         create_purchase_detail(
-            dtl_id=detail.dtl_id,
             trd_id=created_purchase.trd_id,
             prd_id=detail.prd_id,
             prd_code=detail.prd_code,
