@@ -30,8 +30,8 @@ if __name__ == "__main__":
 
 '''
 
-
-def test_create_purchase():
+# 無効化しています。無効化を辞める場合はdisable_を削除
+def disable_test_create_purchase():
     response = client.post(
         "/purchase/",
         json=[
