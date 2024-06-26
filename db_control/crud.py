@@ -21,11 +21,10 @@ def create_purchase(datetime, emp_cd, store_cd, pos_no, total_amount):
     finally:
         session.close()
 
-def create_purchase_detail(dtl_id, trd_id, prd_id, prd_code, prd_name, prd_price, quantity):
+def create_purchase_detail(trd_id, prd_id, prd_code, prd_name, prd_price, quantity):
     session = SessionLocal()
     try:
         purchase_detail = PurchaseDetail(
-            dtl_id = dtl_id,
             trd_id = trd_id,
             prd_id = prd_id,
             prd_code = prd_code,

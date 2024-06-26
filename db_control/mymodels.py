@@ -29,7 +29,7 @@ class Purchase(Base):
     emp_cd = Column(String)
     store_cd = Column(String)
     pos_no = Column(String)
-    total_amount = Column(Float, nullable=False)
+    total_amount = Column(Integer, nullable=False)
 
     def __repr__(self):
         return f'<Purchase {self.id}>'

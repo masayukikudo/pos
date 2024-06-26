@@ -41,6 +41,7 @@ class PurchaseDetailModel(BaseModel):
     prd_price: int
     quantity: int
 
+
 @app.get("/search_product/", response_model=ProductModel)
 async def search_product(code: str) -> Optional[ProductModel]:
     product = get_product_by_code(code)
@@ -72,6 +73,7 @@ async def create_purchase_endpoint(purchase_details: List[PurchaseDetailModel]):
         pos_no=purchase.pos_no,
         total_amount=purchase.total_amount
     )
+    print('Purchaseテーブルへの登録完了')
     for detail in purchase_details:
         create_purchase_detail(
             trd_id=created_purchase.trd_id,

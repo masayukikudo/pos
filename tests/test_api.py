@@ -34,24 +34,22 @@ if __name__ == "__main__":
 def test_create_purchase():
     response = client.post(
         "/purchase/",
-        json={
-            "purchase_details": [
-                {
-                    "prd_id": 1,
-                    "prd_code": "000001",
-                    "prd_name": "お茶",
-                    "prd_price": 150.0,
-                    "quantity": 2
-                },
-                {
-                    "prd_id": 2,
-                    "prd_code": "000002",
-                    "prd_name": "コーラ",
-                    "prd_price": 200.0,
-                    "quantity": 1
-                }
-            ]
-        }
+        json=[
+            {
+                "prd_id": 1,
+                "prd_code": "000001",
+                "prd_name": "お茶",
+                "prd_price": 150,
+                "quantity": 2
+            },
+            {
+                "prd_id": 2,
+                "prd_code": "000002",
+                "prd_name": "コーラ",
+                "prd_price": 200,
+                "quantity": 1
+            }
+        ]
     )
     print(response.json())
     assert response.status_code == 200
