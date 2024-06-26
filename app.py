@@ -86,12 +86,3 @@ async def create_purchase_endpoint(purchase_details: List[PurchaseDetailModel]):
     return created_purchase
 
 
-'''
-@app.post("/purchase/", response_model=PurchaseModel)
-async def create_purchase_endpoint(purchase: PurchaseModel):
-    created_purchase = create_purchase(purchase)
-    return created_purchase
-'''
-
-
-
